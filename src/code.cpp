@@ -1056,10 +1056,16 @@ start_run_code:
     {
       Expr *scrut = run_code(e->kids[0]);
       if (!scrut) return 0;
-      // Apply weak-head reduction
+      // Apply WHR to c-expressions, otherwise you don't really know the head.
       if (scrut->getclass() == CEXPR)
       {
-        scrut = static_cast<CExpr*>(scrut)->whr();
+        Expr *tmp = static_cast<CExpr*>(scrut)->whr();
+        // If a new expression is returned, dec the old RC
+        if (tmp != scrut)
+        {
+          scrut->dec();
+          scrut = tmp;
+        }
       }
       vector<Expr *> args;
       Expr *hd = scrut->collect_args(args);
